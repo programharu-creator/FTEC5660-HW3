@@ -1,0 +1,166 @@
+[
+  {
+    "label": "baseline_1",
+    "mode": "baseline",
+    "run": 1,
+    "companies": 20,
+    "correct": 60,
+    "total": 60,
+    "balanced_accuracy": 1.0,
+    "pass_recall": 1.0,
+    "fail_recall": 1.0,
+    "seconds": 14.587,
+    "model_calls": 20,
+    "input_tokens": 17964,
+    "output_tokens": 3391,
+    "interviews": 60,
+    "max_interviews_per_company": 3,
+    "failed_companies": 0,
+    "degraded_companies": 0,
+    "supplemented_companies": 0,
+    "returned_models": [
+      "deepseek-flash"
+    ],
+    "per_point": {
+      "4": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "7": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "11": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      }
+    },
+    "disagreements": []
+  },
+  {
+    "label": "reflection_1",
+    "mode": "reflection",
+    "run": 1,
+    "companies": 20,
+    "correct": 60,
+    "total": 60,
+    "balanced_accuracy": 1.0,
+    "pass_recall": 1.0,
+    "fail_recall": 1.0,
+    "seconds": 24.489,
+    "model_calls": 40,
+    "input_tokens": 36688,
+    "output_tokens": 6859,
+    "interviews": 60,
+    "max_interviews_per_company": 3,
+    "failed_companies": 0,
+    "degraded_companies": 0,
+    "supplemented_companies": 0,
+    "returned_models": [
+      "deepseek-flash"
+    ],
+    "per_point": {
+      "4": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "7": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "11": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      }
+    },
+    "disagreements": []
+  },
+  {
+    "label": "reflection_2",
+    "mode": "reflection",
+    "run": 2,
+    "companies": 20,
+    "correct": 60,
+    "total": 60,
+    "balanced_accuracy": 1.0,
+    "pass_recall": 1.0,
+    "fail_recall": 1.0,
+    "seconds": 24.872,
+    "model_calls": 40,
+    "input_tokens": 36688,
+    "output_tokens": 6841,
+    "interviews": 60,
+    "max_interviews_per_company": 3,
+    "failed_companies": 0,
+    "degraded_companies": 0,
+    "supplemented_companies": 0,
+    "returned_models": [
+      "deepseek-flash"
+    ],
+    "per_point": {
+      "4": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "7": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "11": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      }
+    },
+    "disagreements": []
+  },
+  {
+    "label": "reflection_3",
+    "mode": "reflection",
+    "run": 3,
+    "companies": 20,
+    "correct": 60,
+    "total": 60,
+    "balanced_accuracy": 1.0,
+    "pass_recall": 1.0,
+    "fail_recall": 1.0,
+    "seconds": 22.975,
+    "model_calls": 40,
+    "input_tokens": 36688,
+    "output_tokens": 6826,
+    "interviews": 60,
+    "max_interviews_per_company": 3,
+    "failed_companies": 0,
+    "degraded_companies": 0,
+    "supplemented_companies": 0,
+    "returned_models": [
+      "deepseek-flash"
+    ],
+    "per_point": {
+      "4": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "7": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      },
+      "11": {
+        "correct": 20,
+        "pass_recall": 1.0,
+        "fail_recall": 1.0
+      }
+    },
+    "disagreements": []
+  }
+]

@@ -1,183 +1,119 @@
-# FTEC5660 Homework 3: Fisher's 15-Point Investment Agent
+# FTEC5660 Homework 3
 
-Build a LangChain agent that researches a company with tools and applies the
-framework from Philip Fisher's *Common Stocks and Uncommon Profits* (Part One,
-Chapter 3 "What to buy: the fifteen points to look for in a common stock", and
-Chapter 4 "What to buy: applying this to your own needs"). You choose 3 of
-Fisher's 15 points and decide yourself what PASS means for each. For every
-company your agent gives a PASS/FAIL verdict on your 3 points and a short
-summary.
+This repository implements a Fisher analysis agent for points 4, 7 and 11, using LangChain and the required DeepSeek model to produce evidence-based verdicts for each supplied company.
 
-The companies are fictional, so the model cannot answer from memory. Unlike a
-pile of reports, the evidence is spread over three sources, and your agent has
-to go and get it with tools, the way Fisher's "scuttlebutt" method sends an
-investor to talk to customers, competitors, suppliers and staff.
+## Running the submission
 
-## Data and tools
-
-`public_test/` has one folder per company. Your code receives four tools per
-company (built by the provided code in `hw3.py`):
-
-| Tool | What it gives you |
-| --- | --- |
-| `list_documents()` | the company's six documents and their dates |
-| `read_document(name)` | one document: the 2025 letter to shareholders, four earnings calls (Q3 2025 to Q2 2026) and a news file (July 2025 to July 2026) |
-| `sql_query(query)` | one read-only SQLite query on the company's database; at most 50 rows come back, so use `SUM`, `GROUP BY` and `WHERE` |
-| `interview(role, topic)` | what one person says about the company; at most **10 interviews per company** |
-
-The documents are what management says. Management's own claims (such as "we
-have never cut research" or "our people are our greatest strength") are not
-evidence on their own: check them against the database and the interviews.
-
-**Database tables** (amounts in USD thousands; dates `YYYY-MM-DD`, months
-`YYYY-MM`, quarters like `2025Q3`; the fiscal year is the calendar year):
-
-| Table | Columns |
-| --- | --- |
-| `company` | name, industry |
-| `industry_medians` | industry, revenue_growth_2y_pct, new_product_share_pct, new_product_sales_per_rd, operating_margin_pct (one row per industry; use the row for the company's own industry) |
-| `orders` | order_id, order_date, product, customer, amount, note (about 3,000 to 4,000 orders from January 2023 to June 2026; revenue is the sum of order amounts) |
-| `products` | product, launch_date |
-| `monthly_costs` | month, cost_of_sales, selling_admin, research_development |
-| `quarterly_cash` | quarter, operating_cash_flow, capex, cash_end |
-| `capex_plan` | year, planned_capex (2026 to 2028) |
-| `returns` | month, units_shipped, units_returned |
-| `insider_trades` | trade_date, person, title, side (`buy` or `sell`), shares, price |
-
-**Terms used in the data.**
-
-| Term | Meaning |
-| --- | --- |
-| FY2025 | Fiscal year 2025. Here the fiscal year is the calendar year, so FY2025 is January to December 2025. |
-| Quarter | Three months of the year: Q1 is January to March, Q2 April to June, Q3 July to September and Q4 October to December. The database writes `2025Q3`; the documents write "third quarter 2025". |
-| Amounts | The database is in **USD thousands** (676,100 means US$676.1 million). The documents use USD millions. |
-| Revenue | Money from sales: the sum of `amount` in `orders`. |
-| Cost of sales | The cost of making the products that were sold. |
-| Selling and admin | The cost of selling and of running the company (sales staff, offices, management). |
-| R&D | Research and development spending, mainly on new products. |
-| Operating margin | Operating profit as a share of revenue: (revenue − cost of sales − selling and admin − R&D) ÷ revenue. |
-| Operating cash flow | Cash that the day-to-day business brings in during a quarter. |
-| Cash at the end of a quarter | The cash the company holds on the last day of that quarter (`cash_end`). |
-| Capex | Capital expenditure: spending on factories, machines and other long-term assets. `capex_plan` holds the planned capex for 2026 to 2028. |
-| Return rate | Units returned ÷ units shipped, from the `returns` table. |
-| Industry median | The middle value for companies in the same industry, from `industry_medians`. |
-| Insider | A director or senior manager of the company. `insider_trades` lists the shares they bought (`buy`) or sold (`sell`). |
-| Earnings call | A meeting each quarter where management presents the quarter's results to investors. Each call quotes that quarter's revenue. |
-
-**Interviews.** Roles: `customer`, `current_employee`, `former_employee`,
-`competitor`, `supplier`. Topics: `sales_team`, `working_conditions`,
-`top_management`, `decision_making`, `competitive_edge`. Only some people know
-about each topic; the others say they can't comment, and that answer still
-uses up one interview.
-
-| Topic | Who knows about it |
-| --- | --- |
-| `sales_team` | customer, competitor |
-| `working_conditions` | current_employee, former_employee |
-| `top_management` | former_employee, supplier |
-| `decision_making` | supplier, customer |
-| `competitive_edge` | competitor, customer |
-
-People who know about a topic always agree with each other, so one good answer
-is enough.
-
-## Choose your 3 points and your rules
-
-Pick any 3 of Fisher's 15 points and write them in `CHOSEN_POINTS` near the
-top of `hw3.py`, e.g. `CHOSEN_POINTS = [1, 7, 15]`. The full questions are in
-`FISHER_POINTS` in `hw3.py` and in the book.
-
-| # | Fisher's point | Where the evidence is |
-| --- | --- | --- |
-| 1 | Market potential for sales growth | database |
-| 2 | New products as current lines mature | database |
-| 3 | Effective research and development | database |
-| 4 | Above-average sales organization | interviews (`sales_team`) |
-| 5 | Worthwhile profit margin | database |
-| 6 | Maintaining or improving margins | database |
-| 7 | Labour and personnel relations | interviews (`working_conditions`) |
-| 8 | Executive relations | interviews (`top_management`) |
-| 9 | Depth of management | interviews (`decision_making`) |
-| 10 | Cost analysis and accounting controls | earnings calls, checked against the database |
-| 11 | Advantage over competitors | interviews (`competitive_edge`) |
-| 12 | Long-range outlook on profits | database |
-| 13 | Growth without dilutive equity financing | database |
-| 14 | Management talks freely about troubles | earnings calls, checked against the database |
-| 15 | Management of unquestionable integrity | news file, checked against the database |
-
-For each of your points, **you design the rule**: which evidence to use, what
-to compute or whom to ask, and where the line between PASS and FAIL lies. PASS
-means the company looks favourable on that point, as Fisher would see it.
-
-We grade your verdicts against our own answer key. It uses one fixed rule per
-point, which we do not publish, and the data never puts a company close to
-the line of that rule, so a sensible reading of Fisher usually gives the same
-answer. **Test your rules on the public answers**:
-`public_test/ground_truth.json` gives the expected verdict on all 15 points
-for each of the 20 public companies, and every point fails in 6 of them. If
-your rule disagrees with the public answers, rethink it.
-
-**Tip: calculate with tools, not in your head.** Do every sum, ratio and
-comparison in SQL or Python, including the number of days between two dates
-(SQLite's `julianday()` gives a date as a number of days).
-
-## Student task
-
-Fill in the three places in `hw3.py` marked `### YOUR CODE HERE`. You may add
-imports, constants and helper functions above them, but do not change the
-provided code below them:
-
-- `CHOSEN_POINTS` lists your 3 points.
-- `build_agent()` creates your model and anything else you need once.
-- `analyze_companies(agent, companies)` receives
-  `{company_folder: [list_documents, read_document, sql_query, interview]}`
-  and returns, for every company,
-  `{"points": {1: "PASS", 7: "FAIL", 15: "PASS"}, "summary": "..."}` (here with
-  `CHOSEN_POINTS = [1, 7, 15]`).
-
-Use the course techniques that fit your points: tool use for the database and
-the interviews, planning which interviews to spend, routing each point to the
-right source, prompt chaining, parallel calls, reflection to check your
-answers, or a combination. Your code must read company data **only through
-the four tools**; do not open `company.db` or `interviews.dat` yourself. Do
-not hard-code folder names, company names or the public answers.
-
-## Setup and public test
+Python 3.12 was used for development and validation, and the following commands prepare a clean environment before running the official entry point.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-echo "DEEPSEEK_API_KEY=your_key_here" > .env
-python3 hw3.py --data-folder public_test
+python -m venv .venv
 ```
 
-Use your own DeepSeek API key (from https://platform.deepseek.com). The
-required model is `deepseek-v4-flash`. We grade with our own key, so never put
-a key in your code; `.env` must stay out of git.
+Activate the environment with the command for your operating system.
 
-The program creates `results.csv` with the columns `company`, `points`,
-`points_correct`, `point_errors`, `interviews_used` and `summary`, and prints
-the point score on your 3 points (the percentage after "balanced"). The point
-score is the average of two shares: the share of truly passing verdicts that
-you marked PASS and the share of truly failing verdicts that you marked FAIL.
-For example, 90% and 60% give (90% + 60%) / 2 = 75%, and marking every point
-PASS gives (100% + 0%) / 2 = 50%. Once `CHOSEN_POINTS` is set, the starter
-runs before you add any API code (it returns no verdicts, so it scores 0%).
+```bash
+source .venv/bin/activate
+```
 
-`public_test/ground_truth.json` gives the expected verdicts on all 15 points
-for each public company. Grading uses a private set of about 20 unseen
-companies with the same tools and the same answer key rules, but different
-names and wording, and scores your 3 points only.
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-## Homework 3 solution:
-> to students: this is your report, see the homework description.
+The exact installed package set is also recorded in `requirements-lock.txt` for reproducing the development environment. Install the dependencies, set the `DEEPSEEK_API_KEY` environment variable through your local credential configuration or a local `.env` file, and run the official command.
 
-### My 3 points and rules
-> for each point: why you chose it, your PASS rule in one or two sentences, and the evidence it uses. Quote Fisher where it helps.
+```bash
+python -m pip install -r requirements.txt
+python hw3.py --data-folder public_test
+```
 
-### Design
-> a visualization of your agent design and one paragraph describing it.
+The official runner produces `results.csv`, containing the three verdicts, the number of correct points, any disagreements, the interview count and an explanatory summary for every company.
 
-### Results
-> your point score on `public_test`, the companies where your verdicts disagree with the public answers, and why.
+## Homework 3 solution
+
+### Selected points and decision rules
+
+The design follows Philip Fisher's *Common Stocks and Uncommon Profits*, Part One, Chapters 3 and 4, with particular attention to the use of knowledgeable outside sources when assessing business quality. The selected points cover customer service, employee relations and competitive positioning, providing three complementary areas of qualitative business evidence that can be assessed within the available interview budget.
+
+**Point 4: Sales organization.** I selected this point because customers can describe the practical quality of account management and technical advice, allowing the agent to assess sales effectiveness through observed interactions. The agent returns PASS when a knowledgeable witness describes concrete capabilities such as useful technical advice, understanding of customer operations, proactive service or durable customer relationships; it returns FAIL when the evidence describes price-list distribution, basic order taking or customers seeking advice from competitors. The initial evidence comes from `interview(customer, sales_team)`, with a competitor interview available when additional evidence is required.
+
+Fisher connects sustained business success with satisfied customers, repeat sales, careful sales training and continued improvements in service, which supports evaluating the quality of the sales relationship through customer experience. The rule therefore relies on described business practices and their implications for customer service, while the model handles variations in wording across companies.
+
+**Point 7: Labour and personnel relations.** I selected this point because employee treatment provides observable evidence about retention, grievance handling and the working relationship between staff and management. The agent returns PASS when the evidence supports fair treatment and healthy personnel relations through fair pay, retention, responsive grievance handling or mutual respect; it returns FAIL when the evidence shows persistent excessive workload, frequent departures, unfair treatment or unresolved concerns. The initial evidence comes from `interview(current_employee, working_conditions)`, with a former employee available for additional evidence.
+
+Fisher discusses worker attitudes, turnover, wage comparisons and the handling of grievances as useful indicators, while also emphasizing the need to consider the overall pattern of personnel relations. This rule uses positive evidence of healthy working practices and concrete evidence of persistent problems, keeping the assessment tied to the witness account.
+
+**Point 11: Industry-specific competitive advantage.** I selected this point because competitor testimony can identify capabilities that influence the ability of rivals to reproduce products or win established customers. The agent returns PASS when a knowledgeable witness describes a specific advantage that supports a sustained competitive position, such as manufacturing knowledge, lengthy qualification, switching costs or specialist service; it returns FAIL when products are readily copied and competition depends mainly on price. The initial evidence comes from `interview(competitor, competitive_edge)`, with a customer available for additional evidence.
+
+Fisher explains that the significance of a business capability depends on the industry and discusses manufacturing knowledge, customer relationships and continuing engineering improvements alongside patent protection. The rule preserves this industry context and allows several forms of durable advantage to support a favourable assessment.
+
+### Agent design
+
+```mermaid
+flowchart TD
+    A[Company and supplied LangChain tools] --> B[Plan three knowledgeable interviews]
+    B --> C[Customer: sales team]
+    B --> D[Current employee: working conditions]
+    B --> E[Competitor: competitive edge]
+    C --> F[Evidence records with source identifiers]
+    D --> F
+    E --> F
+    F --> G[Initial structured assessment]
+    F --> H[Independent structured review]
+    G --> I{Verdict difference or uncertainty}
+    H --> I
+    I -->|Present| J[One alternative witness per affected point]
+    J --> K[Assessment using the expanded evidence]
+    I -->|Absent| L[Validated verdicts and summary]
+    K --> L
+    L --> M[Official runner writes results.csv]
+```
+
+The workflow uses fixed planning and routing because the assignment identifies which witnesses understand each topic, and each initial interview is requested through the supplied LangChain tool. A `ChatDeepSeek` model requests `deepseek-v4-flash`, processes the evidence through a structured LangChain runnable and returns one verdict, source reference, explanation and uncertainty flag for each point. The independent review receives the evidence and the same rules, with the initial verdicts excluded from its input, and the workflow compares both assessments after they finish. A difference in verdict or an uncertainty flag triggers one alternative witness for the affected point and one further assessment using all available evidence, allowing each company to finish with at most six interviews. The implementation executes the initial assessment before the independent review, while interviews and separate companies can run concurrently.
+
+The workflow applies the course patterns of planning, routing, tool use, prompt chaining, parallelization and reflection, with four companies processed concurrently and a 150-second execution limit for each company. Each model request has a 35-second client timeout, each structured assessment has at most two attempts, and each company has separate evidence and execution records. Source identifiers are checked against the point and the available interview records, while schema validation requires all three selected points to occur exactly once. A failed additional review preserves the completed initial assessment, and a company with no completed assessment receives explicitly documented conservative FAIL values so the official runner can still produce its output.
+
+### Public evaluation
+
+The rules were written before the first complete public benchmark, and all company evidence was obtained through the supplied tools. The evaluation script reads `ground_truth.json` after inference to calculate the results, keeping the public answers outside the agent's reasoning input.
+
+| Configuration | Correct verdicts | Balanced accuracy | Runtime in seconds | Model requests | Interviews |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 60/60 | 100.0% | 14.587 | 20 | 60 |
+| Reflection 1 | 60/60 | 100.0% | 24.489 | 40 | 60 |
+| Reflection 2 | 60/60 | 100.0% | 24.872 | 40 | 60 |
+| Reflection 3 | 60/60 | 100.0% | 22.975 | 40 | 60 |
+
+The three reflection runs each achieved 60 correct verdicts from 60 decisions, with PASS recall and FAIL recall both reaching 100% in every run. Their mean balanced accuracy was 100%, and their mean runtime was 24.112 seconds, providing substantial room within the assignment's 30-minute limit. Each selected point had 14 public PASS cases and 6 public FAIL cases, and all three points were classified correctly in every recorded run.
+
+The basic version already reached 100% balanced accuracy, so these measurements show equal public accuracy alongside the extra review cost. The final reflection runs used three interviews per company, and the initial assessments and independent reviews agreed on all verdicts with sufficient confidence to finish using the initial evidence. Targeted behavioural tests exercise the supplementary-interview branch and verify the alternative witness selection for a disputed point. Every recorded run finished with zero failed companies and zero degraded companies.
+
+**Disagreements with the public answers:** All four benchmark runs produced an empty disagreement list, so the report has no public classification errors to attribute to a rule or evidence source. The independent review uses the same underlying model as the initial assessment, which leaves the possibility of correlated errors, and the public results provide evidence about the supplied examples while hidden-company accuracy remains unmeasured.
+
+For a mixed example, Bramble Labs receives PASS on sales organization and personnel relations because the witnesses describe knowledgeable account service, fair pay, retention and responsive problem handling, while its competitive-edge evidence supports FAIL through readily copied products and competition on price. This example illustrates how the workflow keeps the three assessments separate when a company has strengths in some areas and a weakness in another.
+
+The benchmarks were recorded on 9 November 2026, and the recorded results are available in [benchmark.csv](reports/benchmark.csv), [metrics.json](reports/metrics.json) and the four company-level result files in [reports](reports). The request parameter remains `deepseek-v4-flash` throughout the implementation, and the service returned `deepseek-flash` in response metadata during these tests; the implementation performs every request with the assignment's specified model identifier.
+
+A fresh local clone was validated with a new virtual environment and a new dependency installation from `requirements.txt`, after which all ten behavioural tests passed and the official command produced 20 result rows with 60 correct verdicts from 60 decisions. That independent execution finished in 19.622 seconds with zero failed or degraded companies and three interviews per company, and its record is available in [fresh_clone_validation.json](reports/fresh_clone_validation.json).
+
+### Reproducing the comparison
+
+The following commands run the basic configuration once and the reflection configuration three times, saving aggregate metrics and company-level results under `reports` while local evidence traces remain under the ignored `.evaluation` directory.
+
+```bash
+python scripts/evaluate.py --mode baseline --runs 1
+python scripts/evaluate.py --mode reflection --runs 3
+python -m unittest discover -s tests -v
+```
+
+Ten local behavioural tests cover knowledgeable witness routing, selective supplementary interviews, unavailable witnesses, review failures, complete assessment failures, per-company timeout isolation, invalid source references, duplicate point validation, summary punctuation and contrast-free explanations. The code preserves the official tool, runner and scoring implementation, and every company evidence request passes through the provided tool interface.
+
+### Task 2 reflection
+
+The discussion of AI sycophancy and AI psychosis is included in [REFLECTION.md](REFLECTION.md), where the analysis considers preference learning, repeated validation, evidence quality and the limits of automated review.
+
+### References
+
+Philip A. Fisher, *Common Stocks and Uncommon Profits and Other Writings*, Wiley, 2003, Part One, Chapters 3 and 4. The course-provided digital reading was used for the interpretation of the selected points.
+
+The supplied [assignment repository](https://github.com/BINH2702/FTEC5660-HW3) provides the tool interface, public companies and official evaluation procedure, while the [LangChain integration documentation](https://docs.langchain.com/oss/python/integrations/chat/deepseek) and [DeepSeek API documentation](https://api-docs.deepseek.com/guides/thinking_mode/) support the model integration and request configuration.

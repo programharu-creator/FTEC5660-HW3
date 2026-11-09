@@ -1,0 +1,5 @@
+label,companies,correct,total,balanced_accuracy,pass_recall,fail_recall,seconds,model_calls,input_tokens,output_tokens,interviews,failed_companies,degraded_companies
+baseline_1,20,60,60,1.0,1.0,1.0,14.587,20,17964,3391,60,0,0
+reflection_1,20,60,60,1.0,1.0,1.0,24.489,40,36688,6859,60,0,0
+reflection_2,20,60,60,1.0,1.0,1.0,24.872,40,36688,6841,60,0,0
+reflection_3,20,60,60,1.0,1.0,1.0,22.975,40,36688,6826,60,0,0

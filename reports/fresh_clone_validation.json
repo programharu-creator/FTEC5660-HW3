@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-09",
+  "python": "3.12.12",
+  "fresh_virtual_environment": true,
+  "installed_from": "requirements.txt",
+  "dependency_check": "passed",
+  "behavioural_tests_passed": 10,
+  "official_command_exit_code": 0,
+  "results_csv_rows": 20,
+  "correct_verdicts": 60,
+  "total_verdicts": 60,
+  "balanced_accuracy": 1.0,
+  "seconds": 19.622,
+  "failed_companies": 0,
+  "degraded_companies": 0,
+  "maximum_interviews": 3
+}
