@@ -92,7 +92,7 @@ The basic version already reached 100% balanced accuracy, so these measurements 
 
 For a mixed example, Bramble Labs receives PASS on sales organization and personnel relations because the witnesses describe knowledgeable account service, fair pay, retention and responsive problem handling, while its competitive-edge evidence supports FAIL through readily copied products and competition on price. This example illustrates how the workflow keeps the three assessments separate when a company has strengths in some areas and a weakness in another.
 
-The benchmarks were recorded on 9 November 2026, and the recorded results are available in [benchmark.csv](reports/benchmark.csv), [metrics.json](reports/metrics.json) and the four company-level result files in [reports](reports). The request parameter remains `deepseek-v4-flash` throughout the implementation, and the service returned `deepseek-flash` in response metadata during these tests; the implementation performs every request with the assignment's specified model identifier.
+Archived summaries follow the final presentation normalisation, with verdicts and resource measurements preserved from each recorded run. The benchmarks were recorded on 9 November 2026, and the recorded results are available in [benchmark.csv](reports/benchmark.csv), [metrics.json](reports/metrics.json) and the four company-level result files in [reports](reports). The request parameter remains `deepseek-v4-flash` throughout the implementation, and the service returned `deepseek-flash` in response metadata during these tests; the implementation performs every request with the assignment's specified model identifier.
 
 A fresh local clone was validated with a new virtual environment and a new dependency installation from `requirements.txt`, after which all ten behavioural tests passed and the official command produced 20 result rows with 60 correct verdicts from 60 decisions. That independent execution finished in 19.622 seconds with zero failed or degraded companies and three interviews per company, and its record is available in [fresh_clone_validation.json](reports/fresh_clone_validation.json).
 
@@ -106,7 +106,7 @@ python scripts/evaluate.py --mode reflection --runs 3
 python -m unittest discover -s tests -v
 ```
 
-Ten local behavioural tests cover knowledgeable witness routing, selective supplementary interviews, unavailable witnesses, review failures, complete assessment failures, per-company timeout isolation, invalid source references, duplicate point validation, summary punctuation and contrast-free explanations. The code preserves the official tool, runner and scoring implementation, and every company evidence request passes through the provided tool interface.
+Ten local behavioural tests cover knowledgeable witness routing, selective supplementary interviews, unavailable witnesses, review failures, complete assessment failures, per-company timeout isolation, invalid source references, duplicate point validation, summary punctuation, direct descriptions of price competition and contrast-free explanations. The code preserves the official tool, runner and scoring implementation, and every company evidence request passes through the provided tool interface.
 
 ### Task 2 reflection
 

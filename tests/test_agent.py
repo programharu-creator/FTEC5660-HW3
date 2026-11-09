@@ -128,6 +128,7 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['summary'].count('.'), 3)
         self.assertNotIn(chr(34), result['summary'])
         self.assertNotIn(chr(0x2014), result['summary'])
+        self.assertEqual(hw3._prose('The market is a price fight.'), 'the market is a price competition')
 
 
 if __name__ == '__main__':

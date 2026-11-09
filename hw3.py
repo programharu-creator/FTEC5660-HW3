@@ -138,6 +138,7 @@ def _prose(text: str) -> str:
     text = text.translate(str.maketrans({chr(34): '', '\u201c': '', '\u201d': '',
                                        '\u2014': ',', '\u2013': ','}))
     text = re.sub(r'\s+', ' ', text).strip().rstrip('.; ')
+    text = re.sub(r'\bprice fight\b', 'price competition', text, flags=re.I)
     text = re.sub(r'\s+(?:rather than|instead of)\s+[^.;!?]+', '', text, flags=re.I)
     text = re.sub(r'\bnot only\s+', '', text, flags=re.I)
     text = re.sub(r'\bbut also\s+', 'and ', text, flags=re.I)
